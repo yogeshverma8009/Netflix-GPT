@@ -1,3 +1,6 @@
+# Live
+- You can see live (https://netflixgptplus-4c2fd.web.app)
+
 # Netflix GPT
 
 - Getting Started with Create React App
