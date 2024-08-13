@@ -1,10 +1,18 @@
 import React, { useRef, useState } from "react";
 import Header from "./Header";
 import { checkValidateData } from "../utils/validate";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth } from "../utils/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
 
 const Login = () => {
   const [isSignInForm, setIsSignInForm] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   //via use useref hook it will only giv refrence of input
   const email = useRef(null);
@@ -17,13 +25,60 @@ const Login = () => {
     // console.log(email.current.value);
     // console.log(password.current.value);
 
-    const message = checkValidateData(
-      email.current.value,
-      password.current.value,
-      name.current.value,
-    );
-    // console.log(message)
+    const emailValue = email.current.value;
+    const passwordValue = password.current.value;
+    const nameValue = !isSignInForm && name.current ? name.current.value : '';
+
+    // Validate the form data
+    const message = checkValidateData(emailValue, passwordValue, nameValue);
     setErrorMessage(message);
+
+    //Sign In Sign Up Logic
+
+    if (!isSignInForm) {
+      //Sign Up Logic
+      createUserWithEmailAndPassword(
+        auth,
+        emailValue,
+        passwordValue,
+        nameValue,
+      )
+        .then((userCredential) => {
+          const user = userCredential.user;
+          updateProfile(user, {
+            displayName: nameValue, photoURL: "https://avatars.githubusercontent.com/u/172615906?s=400&u=99ac064e6db7138e63221a55ef434435bdeb7969&v=4"
+          }).then(() => {
+            // Profile updated!
+            const {uid,email,displayName,photoURL} = user;
+            dispatch(addUser({uid: uid, email:email, displayName:displayName, photoURL:photoURL}));
+            console.log(user);
+          navigate("/browse");
+          }).catch((error) => {
+            // An error occurred
+            setErrorMessage(error.message)
+          });
+          
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrorMessage(errorCode + " - " + errorMessage);
+        });
+    } else {
+      //sign In Logic
+      signInWithEmailAndPassword(auth, emailValue, passwordValue)
+        .then((userCredential) => {
+          // Signed in
+          const user = userCredential.user;
+          console.log(user);
+          navigate("/browse");
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrorMessage(errorCode + " - " + errorMessage);
+        });
+    }
   };
 
   const toggleSignInForm = () => {
