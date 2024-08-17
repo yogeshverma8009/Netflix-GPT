@@ -4,15 +4,15 @@ import { checkValidateData } from "../utils/validate";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
+import { photoURL } from "../utils/constants";
 
 const Login = () => {
   const [isSignInForm, setIsSignInForm] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  
 
   //via use useref hook it will only giv refrence of input
   const email = useRef(null);
@@ -46,13 +46,13 @@ const Login = () => {
         .then((userCredential) => {
           const user = userCredential.user;
           updateProfile(user, {
-            displayName: nameValue, photoURL: "https://avatars.githubusercontent.com/u/172615906?s=400&u=99ac064e6db7138e63221a55ef434435bdeb7969&v=4"
+            displayName: nameValue, photoURL: photoURL,
           }).then(() => {
             // Profile updated!
             const {uid,email,displayName,photoURL} = user;
             dispatch(addUser({uid: uid, email:email, displayName:displayName, photoURL:photoURL}));
             console.log(user);
-          navigate("/browse");
+          // navigate("/browse");
           }).catch((error) => {
             // An error occurred
             setErrorMessage(error.message)
@@ -70,8 +70,8 @@ const Login = () => {
         .then((userCredential) => {
           // Signed in
           const user = userCredential.user;
-          console.log(user);
-          navigate("/browse");
+          // console.log(user);
+          // navigate("/browse");
         })
         .catch((error) => {
           const errorCode = error.code;
